@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Interactive DOM Traversal</title>
+  <style>
+    body {
+      font-family: serif;
+      margin: 25px;
+      background-color: #fff;
+      color: black;
+      transition: background-color 0.3s;
+    }
+
+    p {
+      font-family: sans-serif;
+    }
+
+    header {
+      color: black;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 5px;
+    }
+
+    /* Node styles */
+    .node {
+      padding: 20px;
+      margin: 15px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .grandparent {
+      background-color: #e6ccff; /* light purple */
+    }
+
+    .parent {
+      background-color: #cce5ff; /* light blue */
+      margin: 20px;
+    }
+
+    .child {
+      background-color: #ccffcc; /* light green */
+      margin-left: 20px;
+    }
+
+    /* Highlight style */
+    .highlight {
+      outline: 3px solid #800080; /* dark purple */
+    }
+
+    /* Controls styles */
+    .controls {
+      margin-top: 20px;
+    }
+
+    .controls button {
+      margin: 5px;
+      padding: 10px 15px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      background-color: #ff69b4; /* pink */
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .controls button:hover {
+      background-color: #ff85c1; /* lighter pink on hover */
+    }
+  </style>
+</head>
+<body>
+
+<h1>DOM Manipulation</h1>
+<div id="grandparent" class="node grandparent">
+  Grandparent
+  <div class="node parent">
+    Parent 1
+    <div class="node child">Child 1.1</div>
+    <div class="node child">Child 1.2</div>
+  </div>
+  <div class="node parent">
+    Parent 2
+    <div class="node child">Child 2.1</div>
+    <div class="node child">Child 2.2</div>
+  </div>
+</div>
+
+<div class="controls">
+  <button onclick="traverseDown()">Traverse Down</button>
+  <button onclick="traverseUp()">Traverse Up</button>
+  <button onclick="traverseNext()">Next Sibling</button>
+  <button onclick="traversePrevious()">Previous Sibling</button>
+  <button onclick="addChild()">Add Child</button>
+  <button onclick="deleteNode()">Delete Current</button>
+</div>
+
+<script>
+  let selectedNode = null;
+
+  document.querySelectorAll('.node').forEach(node => {
+    node.addEventListener('click', function(event) {
+      event.stopPropagation();
+      selectNode(this);
+    });
+  });
+
+  function selectNode(node) {
+    if (selectedNode) {
+      selectedNode.classList.remove('highlight');
+    }
+    selectedNode = node;
+    selectedNode.classList.add('highlight');
+  }
+
+  function traverseDown() {
+    if (!selectedNode) return;
+    let child = selectedNode.querySelector('.node');
+    if (child) selectNode(child);
+    else alert("No child element.");
+  }
+
+  function traverseUp() {
+    if (!selectedNode) return;
+    if (selectedNode.id === "grandparent") {
+      alert("Cannot traverse up from the grandparent.");
+      return;
+    }
+    let parent = selectedNode.parentElement.closest('.node');
+    if (parent) selectNode(parent);
+  }
+
+  function traverseNext() {
+    if (!selectedNode) return;
+    let next = selectedNode.nextElementSibling;
+    while (next && !next.classList.contains('node')) {
+      next = next.nextElementSibling;
+    }
+    if (next) selectNode(next);
+    else alert("No next sibling.");
+  }
+
+  function traversePrevious() {
+    if (!selectedNode) return;
+    let prev = selectedNode.previousElementSibling;
+    while (prev && !prev.classList.contains('node')) {
+      prev = prev.previousElementSibling;
+    }
+    if (prev) selectNode(prev);
+    else alert("No previous sibling.");
+  }
+
+  function addChild() {
+    if (!selectedNode) return;
+
+    if (selectedNode.classList.contains('grandparent')) {
+      const newParent = document.createElement('div');
+      newParent.className = 'node parent';
+      newParent.textContent = `Parent ${document.querySelectorAll('.parent').length + 1}`;
+
+      const child1 = document.createElement('div');
+      child1.className = 'node child';
+      child1.textContent = `Child ${Math.random().toFixed(3)}`;
+
+      const child2 = document.createElement('div');
+      child2.className = 'node child';
+      child2.textContent = `Child ${Math.random().toFixed(3)}`;
+
+      newParent.appendChild(child1);
+      newParent.appendChild(child2);
+
+      newParent.addEventListener('click', e => { e.stopPropagation(); selectNode(newParent); });
+      [child1, child2].forEach(c => {
+        c.addEventListener('click', e => { e.stopPropagation(); selectNode(c); });
+      });
+
+      selectedNode.appendChild(newParent);
+    } else if (selectedNode.classList.contains('parent')) {
+      const newChild = document.createElement('div');
+      newChild.className = 'node child';
+      newChild.textContent = `Child ${Math.random().toFixed(3)}`;
+      newChild.addEventListener('click', e => { e.stopPropagation(); selectNode(newChild); });
+      selectedNode.appendChild(newChild);
+    } else {
+      alert("Cannot add a child to a child node.");
+    }
+  }
+
+  function deleteNode() {
+    if (!selectedNode) return;
+    if (selectedNode.id === "grandparent") {
+      alert("Cannot delete the grandparent node.");
+      return;
+    }
+    const parent = selectedNode.parentElement.closest('.node');
+    if (parent) {
+      parent.removeChild(selectedNode);
+      selectedNode = null;
+    }
+  }
+</script>
+
+</body>
+</html>
